@@ -1,99 +1,74 @@
-Below is a clean, professional, emoji-free README that fully explains the project, its purpose, features, installation, and methodology.
-It matches the tone of modern AI/UX research projects and is suitable for GitHub or documentation.
+#L.I.T.A. — Lifetime, I’m Always There
 
-⸻
-
-L.I.T.A. — Lifetime, I’m Always There
-
-L.I.T.A. is an emotionally aware AI companion designed to identify user emotions and respond with empathy, continuity, and conversational depth. Built with Streamlit and powered by transformer-based emotion analysis and generative AI, L.I.T.A. aims to create meaningful human–AI interactions rooted in psychological safety and emotional understanding.
-
-⸻
+L.I.T.A. is an emotionally aware AI companion designed to detect user emotions and respond with empathy, context, and conversational continuity. Powered by transformer-based emotion analysis and generative AI, the system aims to create meaningful, human-centered digital interactions.
 
 Overview
 
-L.I.T.A. analyzes user input, detects the dominant emotion, and generates responses that combine structured emotional grounding with adaptive conversational reasoning. The system blends affective computing principles with human-centered design to create a companion that listens, remembers, and responds with care. Each interaction is stored as part of an evolving emotional journey, allowing users to reflect on their emotional patterns throughout a session.
+L.I.T.A. receives user text input, identifies the dominant emotion, and generates responses that combine structured emotional grounding with adaptive dialogue. Each interaction is stored as part of an evolving emotional journey, enabling users to reflect on their session-level mood patterns.
 
-⸻
-
-Key Features
+Features
 
 Emotion Detection
-	•	Uses the pre-trained model j-hartmann/emotion-english-distilroberta-base for contextual emotion classification.
-	•	Provides a confidence score for each detected emotion.
-	•	Ensures smooth inference through Streamlit’s resource caching.
+	•	Utilizes the pre-trained model j-hartmann/emotion-english-distilroberta-base.
+	•	Extracts dominant emotion and confidence scores.
+	•	Cached using Streamlit resource caching for efficient inference.
 
 Empathetic Response System
 	•	Layer 1: Curated emotion-specific supportive statements.
-	•	Layer 2: GPT-based adaptive replies incorporating recent conversation context.
-	•	Combines reliability (static responses) with personalization (generative responses).
+	•	Layer 2: GPT-powered adaptive responses based on conversational context.
+	•	Ensures both reliability and personalization.
 
 Conversational Memory
-	•	Stores session-level user inputs, detected emotions, and AI responses.
-	•	Displays the complete emotional journey in reverse chronological order.
-	•	Enhances continuity and connection within a single session.
+	•	Tracks user inputs, detected emotions, and AI responses throughout the session.
+	•	Displays an emotional timeline in reverse chronological order.
+	•	Creates continuity and a sense of being understood.
 
-Minimalist User Interface
+Minimalist UI
 	•	Built with Streamlit for real-time interaction.
-	•	Dark-themed, low-distraction design to reduce cognitive strain.
-	•	Clean message containers and structured layout for readability.
-
-⸻
+	•	Dark-themed, minimal, low-distraction interface.
+	•	Clean visual separation of user input, detected emotion, and AI response.
 
 Methodology
 
-L.I.T.A. follows a structured methodology centered on emotional interpretation, empathetic communication, and user-focused design. The system begins by receiving text input through a Streamlit interface designed for comfort and clarity. The input is processed using a transformer-based emotion classification model, which identifies the user’s dominant emotion with high contextual sensitivity. Curated responses provide immediate emotional grounding, while a generative AI model produces adaptive replies based on the detected emotion and conversational history. Finally, each interaction is saved to session memory, enabling users to trace their evolving emotional state and reinforcing a sense of continuity throughout the experience.
-
-⸻
+L.I.T.A. follows a structured methodology grounded in affective computing and modern NLP practices. User input is captured through a minimal Streamlit interface designed for clarity and emotional comfort. The text is processed using a transformer-based emotion classifier that identifies the dominant emotional tone. A two-layer empathetic response framework then generates output: a curated supportive statement provides emotional grounding, while a generative AI model produces a contextually adaptive response informed by recent conversation history. Each exchange is stored in session memory, forming an accessible emotional journey for the user and reinforcing connection and continuity within the session.
 
 Installation
-	1.	Clone the repository
+
+1. Clone the Repository
 
 git clone <your-repo-url>
 cd <repo-folder>
 
-
-	2.	Install dependencies
+2. Install Dependencies
 
 pip install -r requirements.txt
 
-
-	3.	Add your OpenAI API key
+3. Set Your OpenAI API Key
 
 export OPENAI_API_KEY="your-key-here"
 
-
-	4.	Run the application
+4. Run the Application
 
 streamlit run app.py
 
-
-
-⸻
-
 Project Structure
 
-/LITA
+LITA/
 │
 ├── app.py                  # Main Streamlit application
-├── requirements.txt        # Python dependencies
+├── requirements.txt        # Dependencies
 ├── README.md               # Project documentation
-└── assets/                 # Optional UI assets or logos
+└── assets/                 # Optional UI assets (logos, images, etc.)
 
-
-⸻
-
-Future Improvements
-	•	Multi-modal emotion recognition (voice, sentiment patterns)
+Future Enhancements
+	•	Multi-modal emotion detection (voice tone, facial cues)
 	•	Long-term memory across sessions
-	•	Personalization based on user preferences
-	•	Mood trend analytics
-	•	Integration with well-being tools or journaling features
+	•	Personalized emotional profiles
+	•	Mood trend visualization
+	•	Well-being tool integration (journaling, grounding exercises)
 
 ⸻
 
 License
 
 This project is licensed under the MIT License.
-You are free to use, modify, and distribute it with attribution.
-
-⸻
