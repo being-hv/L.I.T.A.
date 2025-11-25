@@ -1,298 +1,361 @@
 # import streamlit as st
 # from transformers import pipeline
+# from openai import OpenAI
+# import time
+# import random
 
-# st.set_page_config(
-#     page_title="L.I.T.A. - Lifetime, I'm Always There",
-#     page_icon="🤖",
-#     layout="centered"
-# )
+# st.set_page_config(page_title="L.I.T.A.", page_icon="🤖", layout="centered")
 
-# st.markdown("""
-#     <style>
-#     body {
-#         background-color: #0e1117;
-#         color: #e0e0e0;
-#         font-family: 'Inter', sans-serif;
-#     }
-#     .stApp {
-#         background-color: #0e1117;
-#     }
-#     h1, h2, h3 {
-#         color: #66c0f4;
-#         text-align: center;
-#         font-weight: 500;
-#     }
-#     textarea {
-#         background-color: #1b1f27 !important;
-#         color: #e0e0e0 !important;
-#         border: 1px solid #30363d !important;
-#         border-radius: 10px !important;
-#         padding: 12px !important;
-#         font-size: 15px !important;
-#     }
-#     div.stButton > button:first-child {
-#         background-color: #222831;
-#         color: #f2f2f2;
-#         border: 1px solid #30363d;
-#         border-radius: 8px;
-#         padding: 0.6em 2em;
-#         font-size: 15px;
-#         transition: 0.2s ease-in-out;
-#     }
-#     div.stButton > button:first-child:hover {
-#         background-color: #66c0f4;
-#         color: #0e1117;
-#     }
-#     .emotion-box {
-#         background-color: #161b22;
-#         border-left: 4px solid #66c0f4;
-#         border-radius: 6px;
-#         padding: 12px 16px;
-#         margin-top: 20px;
-#         font-size: 16px;
-#         color: #e0e0e0;
-#     }
-#     .response-box {
-#         background-color: #1b1f27;
-#         border-left: 4px solid #3aafa9;
-#         border-radius: 6px;
-#         padding: 14px 18px;
-#         margin-top: 12px;
-#         font-size: 15px;
-#         color: #cccccc;
-#     }
-#     footer {
-#         text-align: center;
-#         color: #777;
-#         font-size: 12px;
-#         margin-top: 30px;
-#     }
-#     </style>
-# """, unsafe_allow_html=True)
+# # ---------------- SESSION STATE -----------------
+# if "screen" not in st.session_state:
+#     st.session_state.screen = "menu"
+# if "mood" not in st.session_state:
+#     st.session_state.mood = None
+# if "chat" not in st.session_state:
+#     st.session_state.chat = []
+# if "answers" not in st.session_state:
+#     st.session_state.answers = {}
+# if "typing" not in st.session_state:
+#     st.session_state.typing = False
 
-# st.markdown("<h1>L.I.T.A.</h1>", unsafe_allow_html=True)
-# st.markdown("<h3 style='text-align:center; color:#999;'>Lifetime, I'm Always There</h3>", unsafe_allow_html=True)
-# st.markdown("<hr style='border: 0.5px solid #333;'>", unsafe_allow_html=True)
-
-# @st.cache_resource
-# def load_model():
-#     return pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=False)
-
-# emotion_model = load_model()
-
-# responses = {
-#     "joy": "That’s great to hear! Keep embracing that positivity 🌼",
-#     "sadness": "It’s okay to feel sad. Allow yourself to rest and reflect 💙",
-#     "anger": "Try to pause and breathe — calm is just a few breaths away 🌿",
-#     "fear": "You’re safe here. Facing your fears slowly makes you stronger 🌙",
-#     "surprise": "Unexpected moments often bring growth 🌠",
-#     "disgust": "It’s alright to feel off. Let the feeling pass with time 🕊️",
-#     "neutral": "I’m listening — tell me more about what’s on your mind ☕"
+# questions = {
+#     "q1": "How often have you felt down or hopeless recently?",
+#     "q2": "How often have you felt anxious or on edge?",
+#     "q3": "How often have you struggled to relax or focus?"
 # }
 
-# user_input = st.text_area("L.I.T.A. wants to know how are you feeling today:", placeholder="Type something like 'I feel anxious about exams'")
+# options = {"Not at all": 0, "Several days": 1, "More than half the days": 2, "Nearly every day": 3}
 
-# if st.button("Analyze Emotion"):
-#     if user_input.strip():
-#         with st.spinner("Analyzing your emotion..."):
-#             result = emotion_model(user_input)[0]
-#             emotion = result["label"].lower()
+# @st.cache_resource
+# def load_emotion_model():
+#     return pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=False)
 
-#             st.markdown(f"<div class='emotion-box'>Detected Emotion: <b>{emotion.capitalize()}</b></div>", unsafe_allow_html=True)
+# # ---------------- THEME -----------------
+# def apply_theme(mood):
+#     colors = {
+#         "joy": "#1b2b1b",
+#         "neutral": "#1b1f27",
+#         "sadness": "#151a2e",
+#         "fear": "#2b1b1b",
+#         "anger": "#2e1a1a"
+#     }
+#     bg = colors.get(mood, "#0e1117")
 
-#             response_text = responses.get(emotion, "I'm here with you 💖")
-#             st.markdown(f"<div class='response-box'>{response_text}</div>", unsafe_allow_html=True)
+#     st.markdown(f"""
+#     <style>
+#     body {{ background-color: {bg}; color: #e0e0e0; }}
+#     .user-msg {{ animation: fade 0.5s; background:#222; padding:10px; border-radius:8px; margin:8px 0; }}
+#     .bot-msg {{ animation: slide 0.5s; background:#1b1f27; padding:10px; border-left:4px solid #66c0f4; border-radius:8px; margin:8px 0; }}
+#     @keyframes fade {{ from {{opacity:0}} to {{opacity:1}} }}
+#     @keyframes slide {{ from {{transform:translateX(-10px); opacity:0}} to {{transform:translateX(0); opacity:1}} }}
+#     </style>
+#     """, unsafe_allow_html=True)
 
-#     else:
-#         st.warning("Please enter a message first.")
+# # ---------------- ANALYZE CHECK-IN -----------------
+# def analyze_checkin(ans):
+#     total = sum(options[v] for v in ans.values())
+#     if total <= 2: return "joy"
+#     elif total <= 4: return "neutral"
+#     elif total <= 6: return "sadness"
+#     elif total <= 7: return "fear"
+#     else: return "anger"
 
-# st.markdown("<footer>© 2025 L.I.T.A. - Lifetime, I'm Always There</footer>", unsafe_allow_html=True)
+# # ---------------- AI REPLY -----------------
+# def ai_reply(text, mood):
+#     try:
+#         client = OpenAI(api_key="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")
+#         prompt = f"You are L.I.T.A., an empathetic AI. The user's mood is {mood}. Respond naturally in under 3 sentences."
+#         response = client.chat.completions.create(
+#             model="gpt-4o-mini",
+#             messages=[
+#                 {"role": "system", "content": prompt},
+#                 {"role": "user", "content": text}
+#             ]
+#         )
+#         return response.choices[0].message.content.strip()
+#     except Exception:
+#         return "Something went wrong, but I'm still here."
+
+# # ---------------- MENU SCREEN -----------------
+# if st.session_state.screen == "menu":
+#     st.markdown("<h1 style='text-align:center;'>Welcome to L.I.T.A.</h1>", unsafe_allow_html=True)
+
+#     if st.button("Start Mood Check-In"):
+#         st.session_state.screen = "checkin"
+#         st.rerun()
+
+# # ---------------- CHECK-IN SCREEN -----------------
+# elif st.session_state.screen == "checkin":
+#     st.markdown("<h2 style='text-align:center;'>Mood Check-In</h2>", unsafe_allow_html=True)
+
+#     with st.form("form"):
+#         for key, q in questions.items():
+#             st.session_state.answers[key] = st.radio(q, list(options.keys()), key=key)
+#         submit = st.form_submit_button("Submit")
+
+#     if submit:
+#         st.session_state.mood = analyze_checkin(st.session_state.answers)
+#         apply_theme(st.session_state.mood)
+#         st.session_state.screen = "chat"
+#         st.rerun()
+
+# # ---------------- CHAT SCREEN -----------------
+# elif st.session_state.screen == "chat":
+#     apply_theme(st.session_state.mood)
+#     st.markdown("<h2 style='text-align:center;'>Chat with L.I.T.A.</h2>", unsafe_allow_html=True)
+
+#     for sender, msg in st.session_state.chat:
+#         if sender == "user":
+#             st.markdown(f"<div class='user-msg'><b>You:</b> {msg}</div>", unsafe_allow_html=True)
+#         else:
+#             st.markdown(f"<div class='bot-msg'><b>L.I.T.A.:</b> {msg}</div>", unsafe_allow_html=True)
+
+#     if st.session_state.typing:
+#         st.markdown("<div class='bot-msg'><i>L.I.T.A. is typing...</i></div>", unsafe_allow_html=True)
+
+#     user_input = st.text_input("You:")
+
+#     if st.button("Send"):
+#         if user_input.strip():
+#             st.session_state.chat.append(("user", user_input))
+#             st.session_state.typing = True
+#             st.rerun()
+
+#     if st.session_state.typing:
+#         time.sleep(1)
+#         last_user_msg = st.session_state.chat[-1][1]
+#         bot = ai_reply(last_user_msg, st.session_state.mood)
+#         st.session_state.chat.append(("bot", bot))
+#         st.session_state.typing = False
+#         st.rerun()
+
+# st.markdown("<footer style='text-align:center;color:#888;margin-top:30px;'>© 2025 L.I.T.A.</footer>", unsafe_allow_html=True)
 
 import streamlit as st
 from transformers import pipeline
 from openai import OpenAI
-import random
+import time
+import datetime
 
-st.set_page_config(
-    page_title="L.I.T.A. - Lifetime, I'm Always There",
-    page_icon="🤖",
-    layout="centered"
-)
+st.set_page_config(page_title="L.I.T.A.", page_icon="🤖", layout="centered")
 
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-    color: #e0e0e0;
-    font-family: 'Inter', sans-serif;
-}
-.stApp {
-    background-color: #0e1117;
-}
-h1, h2, h3 {
-    color: #66c0f4;
-    text-align: center;
-    font-weight: 500;
-}
-textarea {
-    background-color: #1b1f27 !important;
-    color: #e0e0e0 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 10px !important;
-    padding: 12px !important;
-    font-size: 15px !important;
-}
-div.stButton > button:first-child {
-    background-color: #222831;
-    color: #f2f2f2;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 0.6em 2em;
-    font-size: 15px;
-    transition: 0.2s ease-in-out;
-}
-div.stButton > button:first-child:hover {
-    background-color: #66c0f4;
-    color: #0e1117;
-}
-.chat-history {
-    background-color: #161b22;
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 20px;
-}
-.response-box {
-    background-color: #1b1f27;
-    border-left: 4px solid #3aafa9;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin-top: 12px;
-    font-size: 15px;
-    color: #cccccc;
-}
-footer {
-    text-align: center;
-    color: #777;
-    font-size: 12px;
-    margin-top: 30px;
-}
-</style>
-""", unsafe_allow_html=True)
+if "screen" not in st.session_state: st.session_state.screen = "menu"
+if "mood" not in st.session_state: st.session_state.mood = None
+if "chat" not in st.session_state: st.session_state.chat = []
+if "answers" not in st.session_state: st.session_state.answers = {}
+if "typing" not in st.session_state: st.session_state.typing = False
 
-st.markdown("<h1>L.I.T.A.</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#999;'>Lifetime, I'm Always There</h3>", unsafe_allow_html=True)
-st.markdown("<hr style='border: 0.5px solid #333;'>", unsafe_allow_html=True)
+questions = {
+    "q1": "How often have you felt down or hopeless recently?",
+    "q2": "How often have you felt anxious or on edge?",
+    "q3": "How often have you struggled to relax or focus?"
+}
+
+options = {"Not at all": 0, "Several days": 1, "More than half the days": 2, "Nearly every day": 3}
 
 @st.cache_resource
 def load_emotion_model():
-    return pipeline(
-        "text-classification",
-        model="j-hartmann/emotion-english-distilroberta-base",
-        return_all_scores=False
-    )
+    return pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=False)
 
-emotion_model = load_emotion_model()
 
-responses = {
-    "joy": [
-        "That’s wonderful to hear! Keep shining 🌞",
-        "Your happiness is contagious — I love hearing that 💛",
-        "Joy suits you — keep it close 🌼"
-    ],
-    "sadness": [
-        "It’s okay to feel this way. I’m right here 💙",
-        "Even cloudy days have their purpose 🌧️",
-        "This moment will pass — just hold on 🌙"
-    ],
-    "anger": [
-        "Take a deep breath — peace will return 🌿",
-        "Your feelings are valid. Let’s find calm 🔥",
-        "You’re doing great. Don’t let anger dim your light 🌾"
-    ],
-    "fear": [
-        "Courage means feeling fear and moving anyway 🌔",
-        "You’re safe here — one step at a time 🌫️",
-        "Bravery often hides behind fear 🌱"
-    ],
-    "surprise": [
-        "Life loves to keep us guessing 🌠",
-        "Whoa, didn’t see that coming either 😄",
-        "Surprises are little sparks of change ✨"
-    ],
-    "disgust": [
-        "It’s okay to feel off sometimes 🕊️",
-        "Let’s take a pause — you deserve peace 🌊",
-        "Not everything needs your energy. Release it 🌬️"
-    ],
-    "neutral": [
-        "I’m listening — what’s on your mind ☕",
-        "Sometimes being neutral means balance 🌤️",
-        "It’s calm moments like this that help you reset 💭"
-    ]
-}
+def base_style():
+    st.markdown("""
+    <style>
 
-if "history" not in st.session_state:
-    st.session_state["history"] = []
+    body {
+        background: radial-gradient(circle at top, #202533 0, #050608 55%) !important;
+        color: #eaeaea !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
 
-def analyze_emotion(text):
-    result = emotion_model(text)[0]
-    return result["label"].lower(), result["score"]
+    .app-wrapper {
+        width: 760px;
+        max-width: 90%;
+        margin: 40px auto;
+    }
 
-def get_response(emotion):
-    return random.choice(responses.get(emotion, ["I'm here with you 💖"]))
+    .glass {
+        background: rgba(255,255,255,0.06);
+        padding: 26px;
+        border-radius: 20px;
+        box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+        border: 1px solid rgba(255,255,255,0.15);
+        backdrop-filter: blur(12px);
+        margin-bottom: 18px;
+    }
 
-def generate_chatbot_reply(user_text, emotion, base_response):
+    .title {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        text-align: center;
+        opacity: 0.85;
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    /* CHAT BUBBLES */
+    .user-msg {
+        background: rgba(255,255,255,0.12);
+        padding: 12px 16px;
+        border-radius: 16px 16px 4px 16px;
+        max-width: 80%;
+        margin-left: auto;
+        margin-bottom: 10px;
+        animation: fade 0.25s ease-out;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+
+    .bot-msg {
+        background: rgba(102,192,244,0.12);
+        padding: 12px 16px;
+        border-radius: 16px 16px 16px 4px;
+        max-width: 80%;
+        margin-right: auto;
+        margin-bottom: 10px;
+        border-left: 2px solid #66c0f4;
+        animation: slide 0.25s ease-out;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+
+    @keyframes fade { from {opacity:0; transform:translateY(4px);} to {opacity:1;} }
+    @keyframes slide { from {opacity:0; transform:translateY(7px);} to {opacity:1;} }
+
+    /* FIX THE BLACK INPUT BOX */
+    input[type="text"], textarea, .stTextInput > div > div > input {
+        background: rgba(255,255,255,0.07) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        padding: 14px 16px !important;
+        color: #ededed !important;
+        border-radius: 14px !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+        width: 100% !important;
+        font-size: 16px !important;
+    }
+
+    .stTextInput > div {
+        background: transparent !important;
+    }
+
+    input[type="text"]:focus {
+        outline: none !important;
+        border: 1px solid rgba(255,255,255,0.35) !important;
+        background: rgba(255,255,255,0.14) !important;
+    }
+
+    .center-btn button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 1.1rem;
+        transition: 0.25s;
+    }
+
+    .center-btn button:hover {
+        background: rgba(255,255,255,0.22);
+    }
+
+    footer {
+        text-align: center;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 25px;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def analyze_checkin(ans):
+    total = sum(options[v] for v in ans.values())
+    if total <= 2: return "joy"
+    elif total <= 4: return "neutral"
+    elif total <= 6: return "sadness"
+    elif total <= 7: return "fear"
+    return "anger"
+
+
+def ai_reply(text, mood):
     try:
-        client = OpenAI(api_key="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")
-        system_prompt = (
-            f"You are L.I.T.A., an empathetic AI companion. "
-            f"The user feels {emotion}. Respond warmly and concisely (max 3 sentences)."
+        client = OpenAI(api_key="YOUR_KEY")  
+        prompt = (
+            f"You are L.I.T.A., a soft and empathetic AI companion. "
+            f"The user's mood is {mood}. Reply warmly in 2–3 concise sentences."
         )
-        messages = [{"role": "system", "content": system_prompt}]
-        for chat in st.session_state["history"][-2:]:
-            messages.append({"role": "user", "content": chat["text"]})
-            messages.append({"role": "assistant", "content": chat["response"]})
-        messages.append({"role": "user", "content": user_text})
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=messages,
-            temperature=0.8,
-            max_tokens=150
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": text},
+            ],
         )
-        return response.choices[0].message.content.strip() or base_response
-    except Exception as e:
-        st.warning(f"⚠️ Chatbot error: {str(e)}")
-        return base_response
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return "I'm still here with you, even though something on my side went wrong."
 
-user_input = st.text_area(
-    "L.I.T.A. wants to know how are you feeling today?",
-    placeholder="Type something like 'I feel nervous but hopeful today...'"
-)
 
-if st.button("Analyze Emotion"):
-    if user_input.strip():
-        with st.spinner("Analyzing your emotion..."):
-            emotion, confidence = analyze_emotion(user_input)
-            base_response = get_response(emotion)
-            ai_reply = generate_chatbot_reply(user_input, emotion, base_response)
-            st.session_state["history"].append({
-                "text": user_input,
-                "emotion": emotion.capitalize(),
-                "confidence": f"{confidence * 100:.2f}%",
-                "response": ai_reply
-            })
-            
-st.markdown("<hr style='border: 0.5px solid #333;'>", unsafe_allow_html=True)
+base_style()
 
-if st.session_state["history"]:
-    st.markdown("<h3>Your Journey with L.I.T.A.</h3>", unsafe_allow_html=True)
-    for chat in reversed(st.session_state["history"]):
-        st.markdown(f"""
-        <div class='chat-history'>
-            <b>You:</b> {chat['text']}<br>
-            <span style='color:#66c0f4;'>Detected Emotion:</span> {chat['emotion']} ({chat['confidence']})<br>
-            <div class='response-box'><b>L.I.T.A.:</b> {chat['response']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+st.markdown("<div class='app-wrapper'>", unsafe_allow_html=True)
 
-st.markdown("<footer>© 2025 L.I.T.A. - Lifetime, I'm Always There</footer>", unsafe_allow_html=True)
+
+if st.session_state.screen == "menu":
+    st.markdown("<h1 class='title'>L.I.T.A.</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Lifetime, I'm Always There</p>", unsafe_allow_html=True)
+
+    st.markdown("<div class='glass'>", unsafe_allow_html=True)
+
+    st.markdown("<div class='center-btn'>", unsafe_allow_html=True)
+    if st.button("Start Mood Check-In"):
+        st.session_state.screen = "checkin"
+        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+elif st.session_state.screen == "checkin":
+    st.markdown("<h2 class='title'>Mood Check-In</h2>", unsafe_allow_html=True)
+    st.markdown("<div class='glass'>", unsafe_allow_html=True)
+
+    with st.form("checkin"):
+        for key, q in questions.items():
+            st.session_state.answers[key] = st.radio(q, list(options.keys()), key=key)
+        submitted = st.form_submit_button("Continue")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if submitted:
+        st.session_state.mood = analyze_checkin(st.session_state.answers)
+        st.session_state.screen = "chat"
+        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+
+
+elif st.session_state.screen == "chat":
+    st.markdown("<h2 class='title'>L.I.T.A.</h2>", unsafe_allow_html=True)
+    st.markdown("<div class='glass'>", unsafe_allow_html=True)
+
+    for sender, msg in st.session_state.chat:
+        if sender == "user":
+            st.markdown(f"<div class='user-msg'><b>You</b><br>{msg}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div class='bot-msg'><b>L.I.T.A.</b><br>{msg}</div>", unsafe_allow_html=True)
+
+    user_input = st.text_input("You:")
+
+    if st.button("Send") and user_input.strip():
+        st.session_state.chat.append(("user", user_input))
+        with st.spinner("L.I.T.A. is typing..."):
+            reply = ai_reply(user_input, st.session_state.mood)
+        st.session_state.chat.append(("bot", reply))
+        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("<footer>© L.I.T.A. by Harshvardhanam</footer>", unsafe_allow_html=True)
